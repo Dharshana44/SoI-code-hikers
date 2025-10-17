@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "^5.1.0",
     "public": "^0.1.5",
+    "react-scripts": "^5.0.1",
     "src": "^1.1.2"
   }
 }
