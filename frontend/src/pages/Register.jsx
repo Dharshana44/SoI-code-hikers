@@ -1,106 +1,93 @@
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Link, useNavigate } from 'react-router-dom'
+import '../Login.css'
+import { createUserWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth'
+import { auth, googleProvider } from '../firebase/firebase'
 
-export default function Register({ onLogin }) {
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+export default function Register() {
+  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '', fullName: '' })
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  const handleSubmit = async (e) => {
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value })
+
+  const handleEmailSignup = async (e) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
-
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords don't match")
+      return
+    }
     try {
-      const url = import.meta.env.VITE_BACKEND_URL?.replace('/api/overview', '') || 'http://localhost:4000'
-      const res = await fetch(`${url}/api/auth/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Registration failed')
+      const credential = await createUserWithEmailAndPassword(auth, formData.email, formData.password)
+      if (credential && credential.user) {
+        navigate('/')
+      } else {
+        setError('Signup did not return a user')
       }
-
-      // Store token and user data
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-
-      // Call parent callback if provided
-      if (onLogin) onLogin(data.user)
-
-      navigate('/')
     } catch (err) {
       setError(err.message)
-    } finally {
-      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignup = async () => {
+    setError('')
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      if (result && result.user) {
+        navigate('/')
+      } else {
+        setError('Google signup did not return a user')
+      }
+    } catch (err) {
+      if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/popup-blocked')) {
+        try {
+          await signInWithRedirect(auth, googleProvider)
+          return
+        } catch (redirectErr) {
+          console.error('redirect fallback failed', redirectErr)
+          setError(redirectErr.message || 'Google redirect failed')
+          return
+        }
+      }
+      setError(err.message)
     }
   }
 
   return (
-    <div className="auth-page">
-      <motion.div
-        className="auth-card"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h2>Join EcoTripAI 🌍</h2>
-        <p className="subtitle">Start your sustainable travel journey</p>
+    <div className="login-root">
+      <div className="login-bg" />
+      <div className="login-main">
+        <div className="login-left">
+          <p className="travel-highlight">JOIN US</p>
+          <h1>Create Your Account</h1>
+          <p className="subtitle">Become a part of our travel community and explore the world with us.</p>
+        </div>
+        <div className="login-right glass-card">
+          <form onSubmit={handleEmailSignup}>
+            <label htmlFor="email">Email</label>
+            <input id="email" name="email" type="email" placeholder="Enter your email" value={formData.email} onChange={handleChange} required />
 
-        {error && <div className="error-box">{error}</div>}
+            <label htmlFor="password">Password</label>
+            <input id="password" name="password" type="password" placeholder="Enter your password" value={formData.password} onChange={handleChange} required />
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Name</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
-              required
-            />
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input id="confirmPassword" name="confirmPassword" type="password" placeholder="Confirm your password" value={formData.confirmPassword} onChange={handleChange} required />
+
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+
+            <button className="login-btn" type="submit">Sign Up</button>
+          </form>
+
+          <div className="or-divider">Or</div>
+
+          <div className="social-btn-row">
+            <button type="button" className="social-btn google" onClick={handleGoogleSignup}><img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" />Google</button>
           </div>
 
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              minLength={6}
-              required
-            />
-          </div>
-
-          <button type="submit" className="cta" disabled={loading} style={{ width: '100%', marginTop: 12 }}>
-            {loading ? 'Creating account...' : 'Sign Up'}
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Already have an account? <Link to="/login">Login</Link>
-        </p>
-      </motion.div>
+          <div className="signup-row">Already have an account? <Link to="/login">Login</Link></div>
+        </div>
+      </div>
     </div>
   )
 }

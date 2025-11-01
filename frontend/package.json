@@ -19,6 +19,7 @@
   "mapbox-gl": "^2.15.0",
   "leaflet": "^1.9.4",
   "react-leaflet": "^4.2.1",
+    "firebase": "^9.22.1",
     "framer-motion": "^10.12.19",
     "lottie-react": "^2.4.0"
   },

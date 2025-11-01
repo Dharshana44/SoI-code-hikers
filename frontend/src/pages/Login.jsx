@@ -1,93 +1,146 @@
 import React, { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { motion } from 'framer-motion'
+import { Link, useNavigate } from 'react-router-dom'
+import '../Login.css'
+import { signInWithEmailAndPassword, signInWithPopup, signInWithRedirect } from 'firebase/auth'
+import { auth, googleProvider, appleProvider } from '../firebase/firebase'
 
-export default function Login({ onLogin }) {
+export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider)
+      if (result && result.user) {
+        setError('')
+        navigate('/')
+      } else {
+        setError('Google sign-in did not return a user')
+      }
+    } catch (err) {
+      // if popup is blocked or user closed it, fallback to redirect flow
+      if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/popup-blocked')) {
+        try {
+          await signInWithRedirect(auth, googleProvider)
+          return
+        } catch (redirectErr) {
+          console.error('redirect fallback failed', redirectErr)
+          setError(redirectErr.message || 'Google redirect failed')
+          return
+        }
+      }
+      console.error(err)
+      setError(err.message || 'Google sign-in failed')
+    }
+  }
+
+  const handleAppleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, appleProvider)
+      if (result && result.user) {
+        setError('')
+        navigate('/')
+      } else {
+        setError('Apple sign-in did not return a user')
+      }
+    } catch (err) {
+      if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/popup-blocked')) {
+        try {
+          await signInWithRedirect(auth, appleProvider)
+          return
+        } catch (redirectErr) {
+          console.error('redirect fallback failed', redirectErr)
+          setError(redirectErr.message || 'Apple redirect failed')
+          return
+        }
+      }
+      console.error(err)
+      setError(err.message || 'Apple sign-in failed')
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setLoading(true)
-
     try {
-      const url = import.meta.env.VITE_BACKEND_URL?.replace('/api/overview', '') || 'http://localhost:4000'
-      const res = await fetch(`${url}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      })
-
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.message || 'Login failed')
+      const credential = await signInWithEmailAndPassword(auth, email, password)
+      if (credential && credential.user) {
+        navigate('/')
+      } else {
+        setError('Email sign-in did not return a user')
       }
-
-      // Store token and user data
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
-
-      // Call parent callback if provided
-      if (onLogin) onLogin(data.user)
-
-      navigate('/')
     } catch (err) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
+      setError('Invalid email or password')
     }
   }
 
   return (
-    <div className="auth-page">
-      <motion.div
-        className="auth-card"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <h2>Welcome Back! 🌿</h2>
-        <p className="subtitle">Login to continue your eco-journey</p>
-
-        {error && <div className="error-box">{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label>Email</label>
+    <div className="login-root">
+      <div className="login-bg" />
+      <div className="login-main">
+        <div className="login-left">
+          <p className="travel-highlight">I TRAVEL</p>
+          <h1>
+            BEYOND <br />
+            BORDERS
+          </h1>
+          <p className="subtitle">Unlock the world. Let your wanderlust lead you to your dream destinations.</p>
+        </div>
+        <div className="login-right glass-card">
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="email">Email</label>
             <input
+              id="email"
               type="email"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
               required
             />
-          </div>
 
-          <div className="form-group">
-            <label>Password</label>
+            <label htmlFor="password">Password</label>
             <input
+              id="password"
               type="password"
+              placeholder="Enter your Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
               required
             />
-          </div>
 
-          <button type="submit" className="cta" disabled={loading} style={{ width: '100%', marginTop: 12 }}>
-            {loading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+            <div className="forgot-signup-row">
+              <Link to="/forgot" className="forgot-link">
+                Forgot password?
+              </Link>
+            </div>
 
-        <p className="auth-footer">
-          Don't have an account? <Link to="/register">Sign up</Link>
-        </p>
-      </motion.div>
+            {error && <p style={{ color: 'red' }}>{error}</p>}
+
+            <button className="login-btn" type="submit">
+              Sign in
+            </button>
+
+            <div className="or-divider">Or</div>
+
+            <div className="social-btn-row">
+              <button type="button" className="social-btn google" onClick={handleGoogleLogin}>
+                <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" />
+                Google
+              </button>
+              <button type="button" className="social-btn apple" onClick={handleAppleLogin}>
+                <img src="https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg" alt="Apple" />
+                Apple
+              </button>
+            </div>
+
+            <div className="signup-row">
+              Don’t have an account? <Link to="/register">Sign Up</Link>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   )
 }
