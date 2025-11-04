@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import Overview from './pages/Overview'
 import Itineraries from './pages/Itineraries'
 import Hub from './pages/Hub'
+import SafetyContext from './pages/SafetyContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import { useAuth } from './context/AuthContext'
@@ -25,6 +26,7 @@ export default function App() {
 							<Route path="/" element={<Overview />} />
 							<Route path="/itineraries" element={<Itineraries />} />
 							<Route path="/hub" element={<Hub />} />
+							<Route path="/safety" element={<SafetyContext />} />
 							<Route path="/discover" element={<div>Discover page (coming soon)</div>} />
 							<Route path="/eco" element={<div>Eco Score page (coming soon)</div>} />
 							<Route path="/local" element={<div>Local Culture page (coming soon)</div>} />

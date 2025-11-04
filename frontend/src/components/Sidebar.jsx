@@ -24,6 +24,7 @@ export default function Sidebar({ collapsed = false }) {
         <NavLink to="/" end className="nav-link">{collapsed ? '🏠' : 'Home'}</NavLink>
         <NavLink to="/discover" className="nav-link">{collapsed ? '🧭' : 'Discover Trips'}</NavLink>
         <NavLink to="/itineraries" className="nav-link">{collapsed ? '🧳' : 'My Itineraries'}</NavLink>
+        <NavLink to="/safety" className="nav-link">{collapsed ? '🛡️' : 'Real-Time Context & Safety'}</NavLink>
         <NavLink to="/eco" className="nav-link">{collapsed ? '🌿' : 'Eco Score'}</NavLink>
         <NavLink to="/local" className="nav-link">{collapsed ? '🗺️' : 'Local Culture'}</NavLink>
         <NavLink to="/rewards" className="nav-link">{collapsed ? '🏆' : 'Rewards'}</NavLink>

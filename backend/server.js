@@ -5,6 +5,9 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcryptjs')
 require('dotenv').config()
 
+// Import routes
+const locationRoutes = require('./routes/locationRoutes')
+
 const app = express()
 
 const MONGO_URI = process.env.MONGO_URI || ''
@@ -16,6 +19,9 @@ app.use(express.json())
 
 // Basic health route
 app.get('/', (req, res) => res.json({ status: 'ok', message: 'Backend running' }))
+
+// Location and Safety Routes
+app.use('/api/location', locationRoutes)
 
 // Mock overview API used by frontend Overview page
 app.get('/api/overview', (req, res) => {
